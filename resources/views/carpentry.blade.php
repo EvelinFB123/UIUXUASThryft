@@ -9,7 +9,7 @@
     <h1 class="text-4xl font-bold mb-2">Product</h1>
     <p class="text-gray-700">
       <a href="{{ route('categories') }}" class="hover:text-yellow-500 hover:underline">Categories</a>
-      > Books
+      > Carpentry
     </p>
   </div>
 </section>
@@ -17,15 +17,14 @@
 <!-- Filter & Sorting -->
 <section class="sticky top-16 z-50 bg-gray-50 border-b shadow w-full">
   <div class="flex items-center p-6 justify-start pl-4">
-    <!-- Filter by Tag (kalau nanti ada) bisa ditaruh di sini -->
     <div class="flex items-center space-x-4">
       <div class="flex items-center mb-0"></div>
       <div class="flex items-center space-x-2">
         <span class="text-sm">Sort by</span>
-        <select class="border rounded px-2 py-1 text-sm">
-          <option>Default</option>
-          <option>Price: Low to High</option>
-          <option>Price: High to Low</option>
+        <select id="sortPrice" class="border rounded px-2 py-1 text-sm">
+          <option value="">Default</option>
+          <option value="asc">Price: Low to High</option>
+          <option value="desc">Price: High to Low</option>
         </select>
       </div>
     </div>
@@ -34,33 +33,17 @@
 
 <!-- Product Grid -->
 <section class="p-6 bg-white">
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
-
-    <!-- Product Cards -->
-    <!-- @php
-      $products = [
-        ['image' => 'pali.jpg', 'name' => 'Hammer', 'price' => '10.000,00'],
-        ['image' => 'gergaji.jpg', 'name' => 'Hand Saw', 'price' => '15.000,00'],
-        ['image' => 'bor.jpg', 'name' => 'Hand Drill', 'price' => '30.000,00'],
-        ['image' => 'baut.jpg', 'name' => 'Nails', 'price' => '10.000,00'],
-        ['image' => 'screw.jpg', 'name' => 'Screw', 'price' => '10.000,00'],
-        ['image' => 'gergaji mesin.jpg', 'name' => 'Electric Saw', 'price' => '45.000,00'],
-        ['image' => 'safety.jpg', 'name' => 'Safety Glasses', 'price' => '15.000,00'],
-        ['image' => 'nailgun.jpg', 'name' => 'Nail Gun', 'price' => '50.000,00'],
-
-      ];
-    @endphp -->
-
+  <div id="product-list" class="grid grid-cols-2 sm:grid-cols-4 gap-6">
     @php
   $products = App\Models\Product::whereHas('category', function($query) {
     $query->where('name', 'Carpentry');
   })->get();
 @endphp
 
-
-
 @foreach($products as $product)
-<a href="{{ route('detail', ['category' => strtolower($product->category->name), 'id' => $product->id]) }}" class="block bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition group">
+<a href="{{ route('detail', ['category' => strtolower($product->category->name), 'id' => $product->id]) }}" 
+       class="product-item block bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition group"
+       data-price="{{ $product->price }}">
   <div class="relative overflow-hidden transition-all duration-500 ease-in-out">
       <img src="{{ asset('images/' . $product->image) }}"
           alt="{{ $product->name }}"
@@ -99,4 +82,40 @@
     <p style="margin: 0; font-size: 14px; color: #666;">Dedicated support</p>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const sortSelect = document.getElementById('sortPrice');
+  
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function() {
+      const sortValue = this.value;
+      const productList = document.getElementById('product-list');
+      const items = Array.from(productList.querySelectorAll('.product-item'));
+
+      if (sortValue === 'asc') {
+        items.sort((a, b) => {
+          const priceA = parseInt(a.dataset.price);
+          const priceB = parseInt(b.dataset.price);
+          return priceA - priceB;
+        });
+      } else if (sortValue === 'desc') {
+        items.sort((a, b) => {
+          const priceA = parseInt(a.dataset.price);
+          const priceB = parseInt(b.dataset.price);
+          return priceB - priceA;
+        });
+      }
+
+      // Clear the container
+      productList.innerHTML = '';
+      
+      // Re-add sorted items
+      items.forEach(item => {
+        productList.appendChild(item);
+      });
+    });
+  }
+});
+</script>
 @endsection

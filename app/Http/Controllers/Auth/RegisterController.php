@@ -48,15 +48,14 @@ class RegisterController extends Controller
         ]);
     }
 
+    /// Proses registrasi (tanpa auto login)
     public function register(Request $request)
     {
         $this->validator($request->all())->validate();
 
-        // Simpan user tanpa login otomatis
         $this->create($request->all());
 
-        // Redirect ke halaman login dengan pesan sukses
-        return redirect('/login')->with('success', 'Registration successful. Please login.');
+        // Redirect ke halaman login supaya user login manual
+        return redirect($this->redirectPath())->with('success', 'Registration successful. Please login.');
     }
-
 }

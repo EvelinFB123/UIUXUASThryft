@@ -13,46 +13,42 @@
     </p>
   </div>
 </section>
-<br><br>
 
 <!-- Filter & Sorting -->
-<section class="flex flex-wrap items-center justify-between p-6 bg-gray-50 border-b">
-  <div class="flex items-center space-x-4">
+<section class="sticky top-16 z-50 bg-gray-50 border-b shadow w-full">
+  <div class="flex flex-wrap items-center justify-between px-6 py-4 gap-4">
+    <!-- Sort by -->
+    <div class="flex items-center space-x-2">
+      <span class="text-sm">Sort by</span>
+      <select id="sortPrice" class="border rounded px-2 py-1 text-sm">
+        <option value="">Default</option>
+        <option value="asc">Price: Low to High</option>
+        <option value="desc">Price: High to Low</option>
+      </select>
+    </div>
 
-  <!-- Filter by Category -->
-<div class="flex items-center mb-4">
-  <span class="mr-2 text-sm">Filter by Category:</span>
-  <select onchange="window.location.href='?filter=' + this.value" class="border rounded px-2 py-1 text-sm">
-    <option value="" {{ request('filter') == null ? 'selected' : '' }}>All</option>
-    <option value="Instruments" {{ request('filter') == 'Instruments' ? 'selected' : '' }}>Instruments</option>
-    <option value="Others" {{ request('filter') == 'Others' ? 'selected' : '' }}>Others</option>
-    <option value="Music Essentials" {{ request('filter') == 'Music Essentials' ? 'selected' : '' }}>Music Essentials</option>
-  </select>
-</div>
-  </div>
-  <div class="flex items-center space-x-2">
-    <span class="text-sm">Sort by</span>
-    <select class="border rounded px-2 py-1 text-sm">
-      <option>Default</option>
-      <option>Price: Low to High</option>
-      <option>Price: High to Low</option>
-    </select>
+    <!-- Filter by Tag -->
+    <div class="flex items-center space-x-2">
+      <span class="text-sm">Filter by Tag:</span>
+      <select onchange="window.location.href='?filter=' + this.value" class="border rounded px-2 py-1 text-sm">
+        <option value="" {{ request('filter') == null ? 'selected' : '' }}>All</option>
+        <option value="Instruments" {{ request('filter') == 'Instruments' ? 'selected' : '' }}>Instruments</option>
+        <option value="Music Essentials" {{ request('filter') == 'Music Essentials' ? 'selected' : '' }}>Music Essentials</option>
+        <option value="Others" {{ request('filter') == 'Others' ? 'selected' : '' }}>Others</option>
+      </select>
+    </div>
   </div>
 </section>
 
 <!-- Product Grid -->
 <section class="p-6 bg-white">
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
-
-  @php
+  <div id="product-list" class="grid grid-cols-2 sm:grid-cols-4 gap-6">
+    @php
       $filter = request('filter');
-
-      // Get products by category
       $products = App\Models\Product::whereHas('category', function($query) {
           $query->where('name', 'Music Essentials');
       });
 
-      // Apply filter if exists
       if ($filter) {
           $products = $products->whereRaw("tags LIKE ?", ["%$filter%"]);
       }
@@ -60,28 +56,26 @@
       $products = $products->get();
     @endphp
 
-
-
-@foreach($products as $product)
-<a href="{{ route('detail', ['category' => strtolower($product->category->name), 'id' => $product->id]) }}" class="block bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition group">
-  <div class="relative overflow-hidden transition-all duration-500 ease-in-out">
-      <img src="{{ asset('images/' . $product->image) }}"
-          alt="{{ $product->name }}"
-          class="w-full h-64 object-contain group-hover:scale-95 transition-all duration-500 ease-in-out" />
-      <span class="absolute top-0 right-0 font-medium py-0.5 px-1 text-sm z-30 rounded inline-block no-underline pointer-events-none {{ $product->condition === 'New' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' }}">
-  {{ $product->condition === 'New' ? 'Unused' : ($product->condition !== 'Not specified' ? $product->condition : '') }}
-</span>
-
-  </div>
-  <div class="p-4 text-center">
-      <h3 class="font-semibold text-gray-800">{{ $product->name }}</h3>
-      <p class="text-sm text-gray-500 mb-1">{{ $product->category->name ?? 'Tanpa Kategori' }}</p>
-      <p class="text-sm text-gray-700 mb-1">{{ Str::limit($product->description, 60) }}</p>
-      <p class="text-yellow-600 font-bold">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
-  </div>
-</a>
-@endforeach
-
+    @foreach($products as $product)
+    <a href="{{ route('detail', ['category' => strtolower($product->category->name), 'id' => $product->id]) }}" 
+       class="product-item block bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition group"
+       data-price="{{ $product->price }}">
+      <div class="relative overflow-hidden transition-all duration-500 ease-in-out">
+        <img src="{{ asset('images/' . $product->image) }}"
+            alt="{{ $product->name }}"
+            class="w-full h-64 object-contain group-hover:scale-95 transition-all duration-500 ease-in-out" />
+        <span class="absolute top-0 right-0 font-medium py-0.5 px-1 text-sm z-30 rounded inline-block no-underline pointer-events-none {{ $product->condition === 'New' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' }}">
+          {{ $product->condition === 'New' ? 'Unused' : ($product->condition !== 'Not specified' ? $product->condition : '') }}
+        </span>
+      </div>
+      <div class="p-4 text-center">
+        <h3 class="font-semibold text-gray-800">{{ $product->name }}</h3>
+        <p class="text-sm text-gray-500 mb-1">{{ $product->category->name ?? 'Tanpa Kategori' }}</p>
+        <p class="text-sm text-gray-700 mb-1">{{ Str::limit($product->description, 60) }}</p>
+        <p class="text-yellow-600 font-bold">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
+      </div>
+    </a>
+    @endforeach
   </div>
 </section>
 
@@ -103,6 +97,27 @@
   </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const sortSelect = document.getElementById('sortPrice');
+  
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function() {
+      const sortValue = this.value;
+      const productList = document.getElementById('product-list');
+      const items = Array.from(productList.querySelectorAll('.product-item'));
 
+      if (sortValue === 'asc') {
+        items.sort((a, b) => parseInt(a.dataset.price) - parseInt(b.dataset.price));
+      } else if (sortValue === 'desc') {
+        items.sort((a, b) => parseInt(b.dataset.price) - parseInt(a.dataset.price));
+      }
+
+      productList.innerHTML = '';
+      items.forEach(item => productList.appendChild(item));
+    });
+  }
+});
+</script>
 
 @endsection

@@ -17,15 +17,14 @@
 <!-- Filter & Sorting -->
 <section class="sticky top-16 z-50 bg-gray-50 border-b shadow w-full">
   <div class="flex items-center p-6 justify-start pl-4">
-    <!-- Filter by Tag (kalau nanti ada) bisa ditaruh di sini -->
     <div class="flex items-center space-x-4">
       <div class="flex items-center mb-0"></div>
       <div class="flex items-center space-x-2">
         <span class="text-sm">Sort by</span>
-        <select class="border rounded px-2 py-1 text-sm">
-          <option>Default</option>
-          <option>Price: Low to High</option>
-          <option>Price: High to Low</option>
+        <select id="sortPrice" class="border rounded px-2 py-1 text-sm">
+          <option value="">Default</option>
+          <option value="asc">Price: Low to High</option>
+          <option value="desc">Price: High to Low</option>
         </select>
       </div>
     </div>
@@ -34,73 +33,88 @@
 
 <!-- Product Grid -->
 <section class="p-6 bg-white">
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
-
-    <!-- Product Cards -->
-    <!-- @php
-      $products = [
-        ['image' => 'seni.jpg', 'name' => 'Seni Hidup Minimalis', 'price' => '15.000,00'],
-        ['image' => 'atomic.jpg', 'name' => 'Atomic Habits', 'price' => '25.000,00'],
-        ['image' => 'alone.jpg', 'name' => 'The Art of Being Alone', 'price' => '35.000,00'],
-        ['image' => 'depresi.jpg', 'name' => 'Seni Mengatasi Depresi', 'price' => '15.000,00'],
-        ['image' => 'alpha.jpg', 'name' => 'The Alpha Girls', 'price' => '25.000,00'],
-        ['image' => 'plan.jpg', 'name' => 'I Used To Have A Plan', 'price' => '20.000,00'],
-        ['image' => 'introvert.jpg', 'name' => 'The Introverts Way', 'price' => '15.000,00'],
-        ['image' => 'sensi.jpg', 'name' => 'The Highly Sensitive Person', 'price' => '20.000,00'],
-        ['image' => 'think.jpg', 'name' => 'Women Who Think Too Much', 'price' => '15.000,00'],
-        ['image' => 'speak.jpg', 'name' => 'Nice Girls Dont Speak Up', 'price' => '35.000,00'],
-        ['image' => 'single.jpg', 'name' => 'Single on Purpose', 'price' => '20.000,00'],
-        ['image' => 'types.jpg', 'name' => 'The Ten Types of Human', 'price' => '20.000,00']
-
-      ];
-    @endphp -->
-
-
+  <div id="product-list" class="grid grid-cols-2 sm:grid-cols-4 gap-6">
     @php
-  $products = App\Models\Product::whereHas('category', function($query) {
-    $query->where('name', 'Books');
-  })->get();
-@endphp
+      $products = App\Models\Product::whereHas('category', function($query) {
+        $query->where('name', 'Books');
+      })->get();
+    @endphp
 
-
-@foreach($products as $product)
-<a href="{{ route('detail', ['category' => strtolower($product->category->name), 'id' => $product->id]) }}" class="block bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition group">
-  <div class="relative overflow-hidden transition-all duration-500 ease-in-out">
-      <img src="{{ asset('images/' . $product->image) }}"
-          alt="{{ $product->name }}"
-          class="w-full h-64 object-contain group-hover:scale-95 transition-all duration-500 ease-in-out" />
-      <span class="absolute top-0 right-0 font-medium py-0.5 px-1 text-sm z-30 rounded inline-block no-underline pointer-events-none {{ $product->condition === 'New' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' }}">
-  {{ $product->condition === 'New' ? 'Unused' : ($product->condition !== 'Not specified' ? $product->condition : '') }}
-</span>
-
-  </div>
-  <div class="p-4 text-center">
-      <h3 class="font-semibold text-gray-800">{{ $product->name }}</h3>
-      <p class="text-sm text-gray-500 mb-1">{{ $product->category->name ?? 'Tanpa Kategori' }}</p>
-      <p class="text-sm text-gray-700 mb-1">{{ Str::limit($product->description, 60) }}</p>
-      <p class="text-yellow-600 font-bold">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
-  </div>
-</a>
-@endforeach
-
+    @foreach($products as $product)
+    <a href="{{ route('detail', ['category' => strtolower($product->category->name), 'id' => $product->id]) }}" 
+       class="product-item block bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition group"
+       data-price="{{ $product->price }}">
+      <div class="relative overflow-hidden transition-all duration-500 ease-in-out">
+          <img src="{{ asset('images/' . $product->image) }}"
+              alt="{{ $product->name }}"
+              class="w-full h-64 object-contain group-hover:scale-95 transition-all duration-500 ease-in-out" />
+          <span class="absolute top-0 right-0 font-medium py-0.5 px-1 text-sm z-30 rounded inline-block no-underline pointer-events-none {{ $product->condition === 'New' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800' }}">
+              {{ $product->condition === 'New' ? 'Unused' : ($product->condition !== 'Not specified' ? $product->condition : '') }}
+          </span>
+      </div>
+      <div class="p-4 text-center">
+          <h3 class="font-semibold text-gray-800">{{ $product->name }}</h3>
+          <p class="text-sm text-gray-500 mb-1">{{ $product->category->name ?? 'Tanpa Kategori' }}</p>
+          <p class="text-sm text-gray-700 mb-1">{{ Str::limit($product->description, 60) }}</p>
+          <p class="text-yellow-600 font-bold">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
+      </div>
+    </a>
+    @endforeach
   </div>
 </section>
 
 <!-- Service Info -->
-<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: flex-start; gap: 30px; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-  <div style="flex: 1;">
-    <h3 style="font-size: 18px; margin: 0 0 8px 0; color: #333;">Guaranteed Quality</h3>
-    <p style="margin: 0; font-size: 14px; color: #666;">Thoroughly inspected for your satisfaction</p>
+<div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 p-5 border border-gray-200 rounded-lg my-6">
+  <div class="text-center">
+    <h3 class="font-semibold text-lg">Guaranteed Quality</h3>
+    <p class="text-gray-600 text-sm">Thoroughly inspected for your satisfaction</p>
   </div>
-  <div style="width: 1px; background-color: #eee; height: 50px;"></div>
-  <div style="flex: 1;">
-    <h3 style="font-size: 18px; margin: 0 0 8px 0; color: #333;">Free Shipping</h3>
-    <p style="margin: 0; font-size: 14px; color: #666;">Order over Rp. 100.000,00</p>
+  <div class="hidden sm:block h-12 w-px bg-gray-200"></div>
+  <div class="text-center">
+    <h3 class="font-semibold text-lg">Free Shipping</h3>
+    <p class="text-gray-600 text-sm">Order over Rp. 100.000,00</p>
   </div>
-  <div style="width: 1px; background-color: #eee; height: 50px;"></div>
-  <div style="flex: 1;">
-    <h3 style="font-size: 18px; margin: 0 0 8px 0; color: #333;">24 / 7 Support</h3>
-    <p style="margin: 0; font-size: 14px; color: #666;">Dedicated support</p>
+  <div class="hidden sm:block h-12 w-px bg-gray-200"></div>
+  <div class="text-center">
+    <h3 class="font-semibold text-lg">24 / 7 Support</h3>
+    <p class="text-gray-600 text-sm">Dedicated support</p>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const sortSelect = document.getElementById('sortPrice');
+  
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function() {
+      const sortValue = this.value;
+      const productList = document.getElementById('product-list');
+      const items = Array.from(productList.querySelectorAll('.product-item'));
+
+      if (sortValue === 'asc') {
+        items.sort((a, b) => {
+          const priceA = parseInt(a.dataset.price);
+          const priceB = parseInt(b.dataset.price);
+          return priceA - priceB;
+        });
+      } else if (sortValue === 'desc') {
+        items.sort((a, b) => {
+          const priceA = parseInt(a.dataset.price);
+          const priceB = parseInt(b.dataset.price);
+          return priceB - priceA;
+        });
+      }
+
+      // Clear the container
+      productList.innerHTML = '';
+      
+      // Re-add sorted items
+      items.forEach(item => {
+        productList.appendChild(item);
+      });
+    });
+  }
+});
+</script>
+
 @endsection

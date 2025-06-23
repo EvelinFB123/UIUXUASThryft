@@ -117,12 +117,13 @@
   </div>
   
   <div class="mt-8 text-center">
-    <button 
-      class="px-6 py-3 bg-white text-yellow-500 rounded border-2 border-yellow-500 
-            hover:!bg-yellow-500 hover:!text-white transition-colors duration-300">
-      See More
-    </button>
-  </div>
+  <button 
+    onclick="window.location.href='{{ route('categories') }}'"
+    class="px-6 py-3 bg-white text-yellow-500 rounded border-2 border-yellow-500 
+          hover:!bg-yellow-500 hover:!text-white transition-colors duration-300">
+    See More
+  </button>
+</div>
 
   </section>
 

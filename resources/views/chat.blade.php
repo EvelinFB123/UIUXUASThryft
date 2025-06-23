@@ -4,7 +4,7 @@
 
 @auth
 <!-- Chat Header -->
-<div class="flex items-center justify-between p-4 border-b bg-white sticky top-14 z-50">
+<div class="flex items-center justify-between p-4 border-b bg-white sticky top-0 z-50">
   <div class="flex items-center space-x-3">
     <a href="{{ url()->previous() }}" class="text-yellow-500">
   <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
@@ -15,7 +15,7 @@
 </a>
 
     <img src="{{ asset('images/user.png') }}" alt="Seller" class="w-8 h-8 rounded-full">
-    <h2 class="text-lg font-semibold">Chat with Thryft</h2>
+    <h2 class="text-lg font-semibold">Seller</h2>
   </div>
 </div>
 

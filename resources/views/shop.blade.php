@@ -78,13 +78,10 @@
     </div>
   </div>
 </a>
+@endforeach
+</div>
 
-      @endforeach
-    </div>
-
-    
-
-    <!-- PAGINATION -->
+<!-- PAGINATION -->
     <div class="mt-8 flex justify-center">
       {{ $products->withQueryString()->links() }}
     </div>

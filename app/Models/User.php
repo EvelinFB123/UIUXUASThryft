@@ -6,6 +6,9 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\OrderHistories;
+use App\Models\ChatMessage;
+use App\Models\Expense;
 
 class User extends Authenticatable
 {
@@ -15,8 +18,13 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'password',
+        'username',
         'phone',
-        'password', // biasanya ada password juga
+        'kota',
+        'profile_picture_url',
+        'address',
+        'role',
     ];
 
     // Kolom yang disembunyikan saat diubah ke array atau json
@@ -29,4 +37,21 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function orders()
+    {
+        return $this->hasMany(OrderHistories::class);
+    }
+
+    public function chatMessages()
+    {
+        return $this->hasMany(ChatMessage::class);
+    }
+
+    public function expenses()
+    {
+        return $this->hasMany(Expense::class);
+    }
+
+
 }

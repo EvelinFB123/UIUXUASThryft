@@ -8,15 +8,10 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
+    // HAPUS SEMUA MIDDLEWARE DI CONSTRUCTOR
+    // JANGAN PAKAI METHOD MIDDLEWARE() DI CONTROLLER
 
     public function showLoginForm()
-    /**
-     * Tampilkan halaman form login.
-     *
-     * Jika user sudah login, akan redirect ke halaman utama.
-     *
-     * @return \Illuminate\Http\Response
-     */
     {
         if (Auth::check()) {
             return redirect('/');

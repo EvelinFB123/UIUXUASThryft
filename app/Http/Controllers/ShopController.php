@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
+use Illuminate\Auth\AuthenticationException;
 
 
 class ShopController extends Controller
@@ -20,17 +21,19 @@ class ShopController extends Controller
     {
         $categories = Category::all();
         $products = Product::with('category')
-    ->when($request->category, function ($query) use ($request) {
-        $query->where('category_id', $request->category);
-    })
-    ->paginate(16); // 4 row × 4 col
-
+            ->where('is_active', true) // Hanya produk aktif
+            ->when($request->category, function ($query) use ($request) {
+                $query->where('category_id', $request->category);
+            })
+            ->paginate(16);
 
         return view('shop', compact('products', 'categories'));
     }
 
     public function addToCart($id)
     {
+        $product = Product::where('is_active', true)
+                ->findOrFail($id);
         $product = Product::findOrFail($id);
         $cart = session()->get('cart', []);
     
@@ -53,6 +56,8 @@ class ShopController extends Controller
 
     public function buyNow($id)
     {
+        $product = Product::where('is_active', true)
+                ->findOrFail($id);
         $product = Product::findOrFail($id);
         $cart = session()->get('cart', []);
     
@@ -73,31 +78,99 @@ class ShopController extends Controller
         return redirect()->route('cart')->with('success', 'Product added to cart!');
     }
 
-    public function removeFromCart(Request $request, $id)
-    {
-        $cart = session()->get('cart', []);
-
-        if (isset($cart[$id])) {
-            unset($cart[$id]);
-            session()->put('cart', $cart);
-            return redirect()->back()->with('success', 'Product removed from cart.');
-        }
-
-        return redirect()->route('cart')->with('success', 'Item removed successfully!');
+    public function ajaxRemove($id)
+{
+    $cart = session('cart', []);
+    
+    if (array_key_exists($id, $cart)) {
+        unset($cart[$id]);
+        session(['cart' => $cart]);
     }
 
-    public function cart()
-    {
-        $cart = session()->get('cart', []);
+    // Hitung total baru
+    $total = array_sum(array_map(function ($item) {
+        return $item['price'] * $item['quantity'];
+    }, $cart));
 
-        // Pastikan setiap item di cart punya key 'id', kalau belum tambahkan dari key array-nya
-        foreach ($cart as $key => &$item) {
-            if (!isset($item['id'])) {
-                $item['id'] = $key;
-            }
+    return response()->json([
+        'success' => true,
+        'new_total' => $total,
+        'cart_count' => count($cart)
+    ]);
+}
+
+
+public function cart()
+{
+    $cart = session()->get('cart', []);
+    $invalidItems = [];
+
+    // Filter item yang tidak valid (produk dihapus atau tidak aktif)
+    foreach ($cart as $id => $item) {
+        $product = Product::withTrashed()->find($id);
+        
+        if (!$product || $product->trashed() || !$product->is_active) {
+            $invalidItems[] = $id;
+            continue;
+        }
+        
+        if (!isset($item['id'])) {
+            $cart[$id]['id'] = $id;
+        }
+    }
+
+    // Hapus item tidak valid dari keranjang
+    foreach ($invalidItems as $id) {
+        unset($cart[$id]);
+    }
+
+    session()->put('cart', $cart);
+
+    return view('cart', compact('cart'));
+}
+
+    protected function unauthenticated($request, AuthenticationException $exception)
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $exception->getMessage()], 401);
         }
 
-        return view('cart', compact('cart'));
+        return redirect()->guest(route('login'))->with('error', 'Silakan login terlebih dahulu untuk melanjutkan.');
     }
+
+    public function updateCart(Request $request)
+{
+    $cart = session('cart', []);
+    $id = $request->input('id');
+    $quantity = $request->input('quantity');
+
+    if ($quantity < 1) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Quantity must be at least 1'
+        ]);
+    }
+
+    if (isset($cart[$id])) {
+        $cart[$id]['quantity'] = $quantity;
+        session(['cart' => $cart]);
+        
+        $itemTotal = $cart[$id]['price'] * $quantity;
+        $cartTotal = array_sum(array_map(function ($item) {
+            return $item['price'] * $item['quantity'];
+        }, $cart));
+        
+        return response()->json([
+            'success' => true,
+            'item_total' => $itemTotal,
+            'cart_total' => $cartTotal
+        ]);
+    }
+
+    return response()->json([
+        'success' => false,
+        'message' => 'Product not found in cart'
+    ]);
+}
 
 }

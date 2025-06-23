@@ -15,24 +15,25 @@
   </div>
 </section>
 <!-- Filter & Sorting -->
-<section class="flex flex-wrap items-center justify-between p-6 bg-gray-50 border-b">
-  <div class="flex items-center space-x-4">
-    <!-- Filter by Tag -->
-  <div class="flex items-center mb-4">
-  </div>
-  <div class="flex items-center space-x-2">
-    <span class="text-sm">Sort by</span>
-    <select class="border rounded px-2 py-1 text-sm">
-      <option>Default</option>
-      <option>Price: Low to High</option>
-      <option>Price: High to Low</option>
-    </select>
+<section class="sticky top-16 z-50 bg-gray-50 border-b shadow w-full">
+  <div class="flex items-center p-6 justify-start pl-4">
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center mb-0"></div>
+      <div class="flex items-center space-x-2">
+        <span class="text-sm">Sort by</span>
+        <select id="sortPrice" class="border rounded px-2 py-1 text-sm">
+          <option value="">Default</option>
+          <option value="asc">Price: Low to High</option>
+          <option value="desc">Price: High to Low</option>
+        </select>
+      </div>
+    </div>
   </div>
 </section>
 
 <!-- Product Grid -->
 <section class="p-6 bg-white">
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
+  <div id="product-list" class="grid grid-cols-2 sm:grid-cols-4 gap-6">
 
     <!-- Product Cards -->
     <!-- @php
@@ -59,7 +60,9 @@
 
 
 @foreach($products as $product)
-<a href="{{ route('detail', ['category' => strtolower($product->category->name), 'id' => $product->id]) }}" class="block bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition group">
+<a href="{{ route('detail', ['category' => strtolower($product->category->name), 'id' => $product->id]) }}" 
+       class="product-item block bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition group"
+       data-price="{{ $product->price }}">
   <div class="relative overflow-hidden transition-all duration-500 ease-in-out">
       <img src="{{ asset('images/' . $product->image) }}"
           alt="{{ $product->name }}"
@@ -99,6 +102,40 @@
   </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const sortSelect = document.getElementById('sortPrice');
+  
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function() {
+      const sortValue = this.value;
+      const productList = document.getElementById('product-list');
+      const items = Array.from(productList.querySelectorAll('.product-item'));
 
+      if (sortValue === 'asc') {
+        items.sort((a, b) => {
+          const priceA = parseInt(a.dataset.price);
+          const priceB = parseInt(b.dataset.price);
+          return priceA - priceB;
+        });
+      } else if (sortValue === 'desc') {
+        items.sort((a, b) => {
+          const priceA = parseInt(a.dataset.price);
+          const priceB = parseInt(b.dataset.price);
+          return priceB - priceA;
+        });
+      }
+
+      // Clear the container
+      productList.innerHTML = '';
+      
+      // Re-add sorted items
+      items.forEach(item => {
+        productList.appendChild(item);
+      });
+    });
+  }
+});
+</script>
 
 @endsection
